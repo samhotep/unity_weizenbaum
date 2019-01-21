@@ -17,7 +17,7 @@ class UNITY():
 	def __init__(self, script):
 		self.script = script
 		self.conn = sqlite3.connect('testdb')
-		o = self.conn.execute('SELECT * FROM OPENING WHERE SCRIPT="' + self.script + '"')
+		o = self.conn.execute('SELECT * FROM OPENING WHERE __SCRIPT="' + self.script + '"')
 		for opening in o:
 			try:
 				opening[1]
@@ -27,16 +27,23 @@ class UNITY():
 				pass
 
 	def parse_input(self, user_input):
-		self.user_input = user_input
+		self.user_inputs = user_input.strip().split(' ')
 		self.substitute()
 
 	def substitute(self):
-		subs = self.conn.execute('SELECT NAME, SUBSTITUTION FROM SUBSTITUTION WHERE SCRIPT="' + self.script + '"')
-		for i in subs:
-			if i[0] in self.user_input:
-				self.subbed_input = re.sub(i[0], i[1], self.user_input)
-				print(self.subbed_input)
+		counter, res = 0, []
+		for i in self.user_inputs:
+			subs = self.conn.execute('SELECT __NAME, SUBSTITUTION FROM SUBSTITUTION WHERE __NAME==	"' + i + 
+				'" AND __SCRIPT="' + self.script + '"')
+			for j in subs:
+				print(i + ':')
+				print(j)
+				self.user_inputs[counter] = j[1]
+			counter += 1
+		print(self.user_inputs)
 
 if __name__ == '__main__':
 	if len(sys.argv) > 1:
 		UNITY(sys.argv[1])
+	else:
+		print('Please specify a script.')

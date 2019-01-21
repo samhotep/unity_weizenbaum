@@ -155,13 +155,13 @@ class setup():
 
 	def __init__(self):
 		self.conn = sqlite3.connect('testdb')
-		self.conn.execute('CREATE TABLE SCRIPT(NAME TEXT)')
-		self.conn.execute('CREATE TABLE OPENING(NAME TEXT, SCRIPT TEXT)')
-		self.conn.execute('CREATE TABLE SUBSTITUTION(NAME TEXT, SUBSTITUTION TEXT, SCRIPT TEXT)')
-		self.conn.execute('CREATE TABLE EQ(NAME TEXT, SCRIPT TEXT)')
-		self.conn.execute('CREATE TABLE KEYWORD(NAME TEXT, RANK INT, EQ TEXT, SCRIPT TEXT)')
-		self.conn.execute('CREATE TABLE DECOMP_RULE(NAME TEXT, EQ TEXT,  SEL INT, SCRIPT TEXT)')
-		self.conn.execute('CREATE TABLE REASSEM_RULE(NAME TEXT, TYPE TEXT, D_RULE TEXT, SCRIPT TEXT)')
+		self.conn.execute('CREATE TABLE SCRIPT(__NAME TEXT)')
+		self.conn.execute('CREATE TABLE OPENING(__NAME TEXT, __SCRIPT TEXT)')
+		self.conn.execute('CREATE TABLE SUBSTITUTION(__NAME TEXT, SUBSTITUTION TEXT, __SCRIPT TEXT)')
+		self.conn.execute('CREATE TABLE EQ(__NAME TEXT, __SCRIPT TEXT)')
+		self.conn.execute('CREATE TABLE KEYWORD(__NAME TEXT, RANK INT, EQ TEXT, __SCRIPT TEXT)')
+		self.conn.execute('CREATE TABLE DECOMP_RULE(__NAME TEXT, EQ TEXT,  SEL INT, __SCRIPT TEXT)')
+		self.conn.execute('CREATE TABLE REASSEM_RULE(__NAME TEXT, TYPE TEXT, D_RULE TEXT, __SCRIPT TEXT)')
 
 if __name__ == '__main__':
 	try:

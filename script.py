@@ -32,6 +32,7 @@ class ScriptReader():
 						pass
 					elif self.get_equivalence_class(line):
 						pass
+			self.conn.close()
 			print('Finished scanning.')
 
 	def get_opening(self, line):
@@ -56,14 +57,14 @@ class ScriptReader():
 			temp = None
 		if temp:
 			res = self.clean_group(temp)
-			if not already_exists(self.conn, 'KEYWORD', res[0]):
+			if not already_exists(self.conn, 'KEYWORD', res[0].lower()):
 				try:
-					self.current_keyword = res[0]
+					self.current_keyword = res[0].lower()
 					rank = res[1]
 				except IndexError as e:
 					rank = 0
 				try:
-					self.current_eq = res[2]
+					self.current_eq = res[2].lower()
 				except IndexError as e:
 					self.current_eq = 'None'
 				self.conn.execute('INSERT INTO KEYWORD VALUES("' + self.current_keyword + '", ' + rank + ', "' + \
@@ -107,10 +108,10 @@ class ScriptReader():
 			temp = None
 		if temp:
 			res = self.clean_group(temp)
-			if not already_exists(self.conn, 'SUBSTITUTION', res[0]):
+			if not already_exists(self.conn, 'SUBSTITUTION', res[0].lower()):
 				try:
-					self.conn.execute('INSERT INTO SUBSTITUTION VALUES("' + res[0] + '", "' + res[1] + '", "' + \
-						self.name + '")')
+					self.conn.execute('INSERT INTO SUBSTITUTION VALUES("' + res[0].lower() + '", "' + \
+						res[1].lower()	+ '", "' + self.name + '")')
 					self.conn.commit()
 					return True
 				except IndexError as e:

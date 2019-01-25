@@ -1,4 +1,4 @@
-from data import UNITY
+from data import *
 import sqlite3
 
 class main():

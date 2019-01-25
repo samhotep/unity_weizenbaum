@@ -1,3 +1,4 @@
 -Use 'EXISTS' sqlite3 keyword to determine existence of a table
 -Function to split stored decomposition rules
 -Parser that interpretes rules by their symbols
+-Function to implement rules

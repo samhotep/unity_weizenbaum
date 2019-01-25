@@ -10,7 +10,7 @@ class ScriptReader():
 		self.scan_file(self.name)
 	
 	def create_script(self, name):
-		if not already_exists(self.conn, 'SCRIPT', name):
+		if not self.already_exists('SCRIPT', name):
 			self.conn.execute('INSERT INTO SCRIPT VALUES("' + self.name + '")')
 			self.conn.commit()
 
@@ -42,7 +42,7 @@ class ScriptReader():
 			temp = None
 		if temp:
 			#res = self.clean_group(temp)
-			if not already_exists(self.conn, 'OPENING', temp(1)):
+			if not self.already_exists('OPENING', temp(1)):
 				try:
 					self.conn.execute('INSERT INTO OPENING VALUES("' + temp(1) +'", "' + self.name + '")')
 					self.conn.commit()
@@ -57,7 +57,7 @@ class ScriptReader():
 			temp = None
 		if temp:
 			res = self.clean_group(temp)
-			if not already_exists(self.conn, 'KEYWORD', res[0].lower()):
+			if not self.already_exists('KEYWORD', res[0].lower()):
 				try:
 					self.current_keyword = res[0].lower()
 					rank = res[1]
@@ -66,7 +66,7 @@ class ScriptReader():
 				try:
 					self.current_eq = res[2].lower()
 				except IndexError as e:
-					self.current_eq = 'None'
+					self.current_eq = self.current_keyword
 				self.conn.execute('INSERT INTO KEYWORD VALUES("' + self.current_keyword + '", ' + rank + ', "' + \
 					self.current_eq + '", "' + self.name + '")')
 				self.conn.commit()
@@ -78,10 +78,10 @@ class ScriptReader():
 		except AttributeError as e:
 			temp = None
 		if temp:
-			if not already_exists(self.conn, 'DECOMP_RULE', temp(1)):
+			if not self.already_exists('DECOMP_RULE', temp(1).lower()):
 				self.current_d_rule = temp(1)
-				self.conn.execute('INSERT INTO DECOMP_RULE VALUES("' + temp(1) + '", "' + self.current_eq + \
-					'", "' + self.name + '", 0)')
+				self.conn.execute('INSERT INTO DECOMP_RULE VALUES("' + temp(1).lower() + '", "' + self.current_eq + \
+					'", "' + self.name + '")')
 				self.conn.commit()
 				return True
 
@@ -91,7 +91,7 @@ class ScriptReader():
 		except AttributeError as e:
 			temp = None
 		if temp:
-			if not already_exists(self.conn, 'REASSEM_RULE', temp(1)):
+			if not self.already_exists('REASSEM_RULE', temp(1).lower()):
 				try:
 					rule_type = temp(2)
 				except IndexError as e:
@@ -108,7 +108,7 @@ class ScriptReader():
 			temp = None
 		if temp:
 			res = self.clean_group(temp)
-			if not already_exists(self.conn, 'SUBSTITUTION', res[0].lower()):
+			if not self.already_exists('SUBSTITUTION', res[0].lower()):
 				try:
 					self.conn.execute('INSERT INTO SUBSTITUTION VALUES("' + res[0].lower() + '", "' + \
 						res[1].lower()	+ '", "' + self.name + '")')
@@ -123,7 +123,7 @@ class ScriptReader():
 		except AttributeError as e:
 			temp = None
 		if temp:
-			if not already_exists(self.conn, 'EQ', temp(1)):
+			if not self.already_exists('EQ', temp(1)):
 				self.conn.execute('INSERT INTO EQ VALUES("' + temp(1) + '", "' + self.name + '")')
 				self.conn.commit()
 				return True
@@ -136,6 +136,7 @@ class ScriptReader():
 		self.sr = re.compile(r'Sub: (.*)')
 		self.er = re.compile(r'Eq: (.*)')
 
+	#Helper functions
 	def clean_group(self, group):
 		temp = re.sub('\(', '', group(1))
 		temp = re.sub('\)', '', temp)
@@ -143,14 +144,13 @@ class ScriptReader():
 		res = re.split(',', temp)
 		return res
 
-#Helper function(s)
-def already_exists(conn, table, item):
-	exists = False
-	a = conn.execute('SELECT * FROM ' + table)
-	for i in a:
-		if item in i:
-			exists = True
-	return exists
+	def already_exists(self, table, item):
+		exists = False
+		a = self.conn.execute('SELECT * FROM ' + table)
+		for i in a:
+			if item in i:
+				exists = True
+		return exists
 
 class setup():
 
@@ -161,7 +161,7 @@ class setup():
 		self.conn.execute('CREATE TABLE SUBSTITUTION(__NAME TEXT, SUBSTITUTION TEXT, __SCRIPT TEXT)')
 		self.conn.execute('CREATE TABLE EQ(__NAME TEXT, __SCRIPT TEXT)')
 		self.conn.execute('CREATE TABLE KEYWORD(__NAME TEXT, RANK INT, EQ TEXT, __SCRIPT TEXT)')
-		self.conn.execute('CREATE TABLE DECOMP_RULE(__NAME TEXT, EQ TEXT,  SEL INT, __SCRIPT TEXT)')
+		self.conn.execute('CREATE TABLE DECOMP_RULE(__NAME TEXT, EQ TEXT, __SCRIPT TEXT)')
 		self.conn.execute('CREATE TABLE REASSEM_RULE(__NAME TEXT, TYPE TEXT, D_RULE TEXT, __SCRIPT TEXT)')
 
 if __name__ == '__main__':

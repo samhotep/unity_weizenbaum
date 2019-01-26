@@ -15,42 +15,46 @@ script, then printed to the user. The next task is to parse user input, accordin
 class UNITY():
 
 	def __init__(self, script):
+		#Load the welcome message for the specified script.
 		self.script = script
 		self.conn = sqlite3.connect('testdb')
 		o = self.conn.execute('SELECT * FROM OPENING WHERE __SCRIPT="' + self.script + '"')
 		if len(o.fetchall()) > 0:
 			o = self.conn.execute('SELECT * FROM OPENING WHERE __SCRIPT="' + self.script + '"')
 			for opening in o:
-				opening[1]
 				print('\n' + opening[0])
-				self.parse_input()
+				while True:
+					self.parse_input()
 		else:
 			print('The specified script does not exist. Did you check your spelling?')
 
 	def parse_input(self):
+		#Collect the user input for analysis.
 		user_input = input()
 		self.keystack = []
 		self.user_inputs = user_input.strip().split(' ')
 		self.substitute()
-		self.decompose()
+		self.transform()
 
 	def substitute(self):
-			counter, res = 0, []
-			for i in self.user_inputs:
-				subs = self.conn.execute('SELECT __NAME, SUBSTITUTION FROM SUBSTITUTION WHERE __NAME=="' + i + \
-					'" AND __SCRIPT="' + self.script + '"')
-				for j in subs:
-					self.user_inputs[counter] = j[1]
-				counter += 1
-			print(self.user_inputs) #Debug
+		#Substitute selected words before rules are applied.
+		counter, res = 0, []
+		for i in self.user_inputs:
+			subs = self.conn.execute('SELECT __NAME, SUBSTITUTION FROM SUBSTITUTION WHERE __NAME=="' + i + \
+				'" AND __SCRIPT="' + self.script + '"')
+			for j in subs:
+				self.user_inputs[counter] = j[1]
+			counter += 1
+		print(self.user_inputs) #Debug
 
-	def decompose(self):
+	def transform(self):
 		#Requires construction of regular expressions to look for decomposition rule matches.
 		self.initialize_keystack()
 		self.parse_decomposition_rules()
 
 	def initialize_keystack(self):
 		for i in self.user_inputs:
+			#Scan input text for keywords, and sort them in a stack by rank
 			keys = self.conn.execute('SELECT RANK, EQ FROM KEYWORD WHERE __NAME=="' + i + \
 				'" AND __SCRIPT=="' + self.script + '"')
 			if len(keys.fetchall()) != 0:
@@ -71,15 +75,17 @@ class UNITY():
 		print(self.keystack) #Debug
 
 	def parse_decomposition_rules(self):
+		#Create a rule stack of decomposition rules from the equivalence class of the topmost keyword
 		self.d_rule_stack = []
 		try:
 			decom = self.conn.execute('SELECT __NAME, EQ FROM DECOMP_RULE WHERE EQ=="' + self.keystack[0][0] + \
 			'" AND __SCRIPT=="' + self.script + '"')
 			for i in decom:
-				self.d_rule_stack.append([i[0], i[1], 0])
-				print(self.d_rule_stack) #Debug
+				self.d_rule_stack.append([i[0], i[1]])
+				print('Stack: ' + str(self.d_rule_stack)) #Debug
 				print(self.reconstruct_word(self.user_inputs)) #Debug	
-			self.extract_response()
+			#Topmost decomposition rule determines how the word is reassembled
+			self.assemble_reply(self.extract_response())
 		except IndexError as e:
 			print("I'm sorry, i don't understand")
 
@@ -95,9 +101,33 @@ class UNITY():
 			match = re.search(regex, word)
 			responses = []
 			if match:
-				for i in match.groups():
-					responses.append(i.strip())
-			print(responses)
+				for j in match.groups():
+					responses.append(j.strip())
+				print(responses)
+				self.trans = i
+				print(self.trans[0]) #Debug
+				return responses
+
+	def assemble_reply(self, responses):
+		#Use response values as well as stored reassembly rules to create a reply
+		if responses:
+			selected_rule = ''
+			rules = self.conn.execute('SELECT * FROM REASSEM_RULE WHERE D_RULE=="' + self.trans[0] + \
+				'" AND __SCRIPT=="' + self.script + '"')
+			for i in rules:
+				selected_rule = i[0]
+				print('R-RULE: ' + selected_rule)
+			for i in selected_rule:
+				try:
+					ref = int(i) - 1
+				except ValueError as e:
+					pass
+			print(ref) #Debug
+			cleaned_rule = self.clean_rule(selected_rule)
+			print('Clean: ' + cleaned_rule) #Debug
+			print(responses[ref]) #Debug
+			self.reply = re.sub(r'\d', str(responses[ref]), cleaned_rule)
+			print(self.reply.upper())
 
 	#Helper functions
 	def reconstruct_word(self, word):
@@ -112,7 +142,7 @@ class UNITY():
 		print('Rule: ' + str(rule))
 		rule = re.sub('\(', '', rule)
 		rule = re.sub('\)', '', rule)
-		return rule	
+		return rule
 
 if __name__ == '__main__':
 	if len(sys.argv) > 1:

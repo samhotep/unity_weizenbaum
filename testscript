@@ -4,15 +4,18 @@ Sub: (me, you)
 Sub: (my, your)
 Keyword: (Remember, 5)
 D-Rule: (0 you remember 0)
-R-Rule: (Do you often think of 4)
+R-Rule: (Do you often think of 2)
 D-Rule: (0 do I remember 0)
-R-Rule: (Did you think I would forget 5) 
+R-Rule: (Did you think I would forget 2) 
 Eq: family
 Keyword: (sister, 3, family)
 Keyword: (mother, 3, family)
 
-Note:
-// Every script must begin with START.
-// Equivalence classes must be defined before they can be used by keywords.
-// Rules pertaining to a certain keyword must be defined before the next keyword is defined.
-// The parent decomposition rule for a reassembly rule is the last defined decomposition rule.
+//Note:
+// 1. The format has been slightly changed such that the numbers in the reassembly rules refer to which of the zeroes is 
+// referenced e.g. for D-Rule: (0 do I remember 0), R-Rule: (Did you think I would forget 2) means insert the second 
+// zero's contents. 
+// 2. Every script must begin with START.
+// 3. Equivalence classes must be defined before they can be used by keywords.
+// 4. Rules pertaining to a certain keyword must be defined before the next keyword is defined.
+// 5. The parent decomposition rule for a reassembly rule is the last defined decomposition rule.

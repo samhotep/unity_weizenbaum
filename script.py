@@ -79,9 +79,9 @@ class ScriptReader():
 			temp = None
 		if temp:
 			if not self.already_exists('DECOMP_RULE', temp(1).lower()):
-				self.current_d_rule = temp(1)
-				self.conn.execute('INSERT INTO DECOMP_RULE VALUES("' + temp(1).lower() + '", "' + self.current_eq + \
-					'", "' + self.name + '")')
+				self.current_d_rule = temp(1).lower()
+				self.conn.execute('INSERT INTO DECOMP_RULE VALUES("' + self.current_d_rule + '", "' + \
+					self.current_eq + '", "' + self.name + '")')
 				self.conn.commit()
 				return True
 
@@ -96,8 +96,8 @@ class ScriptReader():
 					rule_type = temp(2)
 				except IndexError as e:
 					rule_type = 'None'
-				self.conn.execute('INSERT INTO REASSEM_RULE VALUES("' + temp(1) + '", "' + rule_type + '", "' + \
-					self.current_d_rule + '", "' + self.name + '")')
+				self.conn.execute('INSERT INTO REASSEM_RULE VALUES("' + temp(1).lower() + '", "' + rule_type + \
+					'", "' + self.current_d_rule + '", "' + self.name + '")')
 				self.conn.commit()
 				return True
 

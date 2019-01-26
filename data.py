@@ -30,11 +30,16 @@ class UNITY():
 
 	def parse_input(self):
 		#Collect the user input for analysis.
-		user_input = input()
 		self.keystack = []
-		self.user_inputs = user_input.strip().split(' ')
+		self.sub_specials(input())
 		self.substitute()
 		self.transform()
+
+	def sub_specials(self, user_input):
+		user_input = re.sub(r'\?', '', user_input).lower()
+		if ',' in user_input:
+			user_input = user_input.split(',')[-1]
+		self.user_inputs = user_input.strip().split(' ')
 
 	def substitute(self):
 		#Substitute selected words before rules are applied.
@@ -45,7 +50,7 @@ class UNITY():
 			for j in subs:
 				self.user_inputs[counter] = j[1]
 			counter += 1
-		print(self.user_inputs) #Debug
+		#print(self.user_inputs) #Debug
 
 	def transform(self):
 		#Requires construction of regular expressions to look for decomposition rule matches.
@@ -72,7 +77,7 @@ class UNITY():
 				if add:
 					self.keystack.append([i, rank])
 				self.keystack.sort(key= lambda s: s[1], reverse=True)
-		print(self.keystack) #Debug
+		#print(self.keystack) #Debug
 
 	def parse_decomposition_rules(self):
 		#Create a rule stack of decomposition rules from the equivalence class of the topmost keyword
@@ -82,50 +87,58 @@ class UNITY():
 			'" AND __SCRIPT=="' + self.script + '"')
 			for i in decom:
 				self.d_rule_stack.append([i[0], i[1]])
-				print('Stack: ' + str(self.d_rule_stack)) #Debug
-				print(self.reconstruct_word(self.user_inputs)) #Debug	
+				#print('Stack: ' + str(self.d_rule_stack)) #Debug
+				#print(self.reconstruct_word(self.user_inputs)) #Debug	
 			#Topmost decomposition rule determines how the word is reassembled
 			self.assemble_reply(self.extract_response())
 		except IndexError as e:
 			print("I'm sorry, i don't understand")
 
 	def extract_response(self):
-		#Transform decomposition rule into a regex, and extract the components necessary for reassembly
+		#Transform decomposition rule into a regex, and extract input components necessary for reassembly
 		word = self.reconstruct_word(self.user_inputs)
-		print('word: ' + word) #Debug
+		#print('word: ' + word) #Debug
 		for i in self.d_rule_stack:
 			res = self.clean_rule(i[0])
-			print('res: ' + str(res)) #Debug
-			regex = re.compile(re.sub(r'\d', r'(.*)', str(res)))
-			print(regex) #Debug
+			#print('res: ' + str(res)) #Debug
+			#print('res: ' + str(re.sub(r'\d', r'\s?(.*)\s?', str(res)))) #Debug
+			regex = re.compile(re.sub(r'\d', r'\s?(.*)\s?', str(res)))
+			#print(regex) #Debug
 			match = re.search(regex, word)
 			responses = []
 			if match:
 				for j in match.groups():
 					responses.append(j.strip())
-				print(responses)
+				#print(responses)
 				self.trans = i
-				print(self.trans[0]) #Debug
+				#print(self.trans[0]) #Debug
 				return responses
 
 	def assemble_reply(self, responses):
 		#Use response values as well as stored reassembly rules to create a reply
 		if responses:
-			selected_rule = ''
+			selected_rule, lowest_rank = '', 9999999999999999
 			rules = self.conn.execute('SELECT * FROM REASSEM_RULE WHERE D_RULE=="' + self.trans[0] + \
 				'" AND __SCRIPT=="' + self.script + '"')
 			for i in rules:
-				selected_rule = i[0]
-				print('R-RULE: ' + selected_rule)
+				#Rules should be shuffled to prevent repetitiveness
+				if int(i[3]) <= lowest_rank:
+					lowest_rank = int(i[3])
+					selected_rule = i[0]
+				#print('R-RULE: ' + selected_rule)
+			lowest_rank += 1
+			self.conn.execute('UPDATE REASSEM_RULE SET RANK=' + str(lowest_rank) + ' WHERE __NAME=="' + \
+				selected_rule + '"')
+			self.conn.commit()
 			for i in selected_rule:
 				try:
 					ref = int(i) - 1
 				except ValueError as e:
 					pass
-			print(ref) #Debug
+			#print(ref) #Debug
 			cleaned_rule = self.clean_rule(selected_rule)
-			print('Clean: ' + cleaned_rule) #Debug
-			print(responses[ref]) #Debug
+			#print('Clean: ' + cleaned_rule) #Debug
+			#print(responses[ref]) #Debug
 			self.reply = re.sub(r'\d', str(responses[ref]), cleaned_rule)
 			print(self.reply.upper())
 
@@ -139,10 +152,11 @@ class UNITY():
 		return w
 
 	def clean_rule(self, rule):
-		print('Rule: ' + str(rule))
+		#print('Rule: ' + str(rule))
 		rule = re.sub('\(', '', rule)
 		rule = re.sub('\)', '', rule)
-		return rule
+		rule = re.sub(r'\s?0\s?', '0', rule)
+		return rule.strip()
 
 if __name__ == '__main__':
 	if len(sys.argv) > 1:

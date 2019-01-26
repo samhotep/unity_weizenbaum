@@ -97,7 +97,7 @@ class ScriptReader():
 				except IndexError as e:
 					rule_type = 'None'
 				self.conn.execute('INSERT INTO REASSEM_RULE VALUES("' + temp(1).lower() + '", "' + rule_type + \
-					'", "' + self.current_d_rule + '", "' + self.name + '")')
+					'", "' + self.current_d_rule + '", 0, "' + self.name + '")')
 				self.conn.commit()
 				return True
 
@@ -162,7 +162,7 @@ class setup():
 		self.conn.execute('CREATE TABLE EQ(__NAME TEXT, __SCRIPT TEXT)')
 		self.conn.execute('CREATE TABLE KEYWORD(__NAME TEXT, RANK INT, EQ TEXT, __SCRIPT TEXT)')
 		self.conn.execute('CREATE TABLE DECOMP_RULE(__NAME TEXT, EQ TEXT, __SCRIPT TEXT)')
-		self.conn.execute('CREATE TABLE REASSEM_RULE(__NAME TEXT, TYPE TEXT, D_RULE TEXT, __SCRIPT TEXT)')
+		self.conn.execute('CREATE TABLE REASSEM_RULE(__NAME TEXT, TYPE TEXT, D_RULE TEXT, RANK INT, __SCRIPT TEXT)')
 
 if __name__ == '__main__':
 	try:

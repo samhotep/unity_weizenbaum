@@ -146,10 +146,18 @@ class ScriptReader():
 
 	def already_exists(self, table, item):
 		exists = False
-		a = self.conn.execute('SELECT * FROM ' + table)
+		print(table)
+		try:
+			a = self.conn.execute('SELECT * FROM ' + table + ' WHERE __NAME=="' + item + '" AND __SCRIPT=="' \
+				+ self.name + '"')
+		except sqlite3.OperationalError as e:
+			a = self.conn.execute('SELECT * FROM ' + table + ' WHERE __NAME=="' + item + '"')
+		if len(a.fetchall()) != 0:
+			exists = True
+		'''
 		for i in a:
 			if item in i:
-				exists = True
+				exists = True'''
 		return exists
 
 class setup():

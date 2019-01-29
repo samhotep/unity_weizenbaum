@@ -2,6 +2,10 @@ START: Hello, how can i help you?
 Sub: (you, I)
 Sub: (me, you)
 Sub: (my, your)
+Sub: (were, was)
+Sub: (dont, don't)
+Sub: (cant, can't)
+Sub: (wont, won't)
 Keyword: (Remember, 5)
 D-Rule: (0 you remember 0)
 R-Rule: (Do you often think of 2)
@@ -13,8 +17,7 @@ Keyword: (mother, 3, family)
 
 //Note:
 // 1. The format has been slightly changed such that the numbers in the reassembly rules refer to which of the zeroes is 
-// referenced e.g. for D-Rule: (0 do I remember 0), R-Rule: (Did you think I would forget 2) means insert the second 
-// zero's contents. 
+// referenced e.g. for Decomposition Rule: (0 do I remember 0), Reassembly Rule: (Did you think I would forget 2) means // insert the second zero's contents. 
 // 2. Every script must begin with START.
 // 3. Equivalence classes must be defined before they can be used by keywords.
 // 4. Rules pertaining to a certain keyword must be defined before the next keyword is defined.

@@ -105,11 +105,12 @@ class UNITY():
 			regex = re.compile(re.sub(r'\d', r'\s?(.*)\s?', str(res)))
 			#print(regex) #Debug
 			match = re.search(regex, word)
+			#print(match.groups()) #Debug
 			responses = []
 			if match:
 				for j in match.groups():
 					responses.append(j.strip())
-				#print(responses)
+				#print(responses) #Debug
 				self.trans = i
 				#print(self.trans[0]) #Debug
 				return responses
@@ -134,12 +135,14 @@ class UNITY():
 				try:
 					ref = int(i) - 1
 				except ValueError as e:
-					pass
-			#print(ref) #Debug
+					pass				
 			cleaned_rule = self.clean_rule(selected_rule)
 			#print('Clean: ' + cleaned_rule) #Debug
 			#print(responses[ref]) #Debug
-			self.reply = re.sub(r'\d', str(responses[ref]), cleaned_rule)
+			try:
+				self.reply = re.sub(r'\d', str(responses[ref]), cleaned_rule)
+			except UnboundLocalError as e:
+				self.reply = re.sub(r'\d', str(responses), cleaned_rule)
 			print(self.reply.upper())
 
 	#Helper functions

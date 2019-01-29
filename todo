@@ -1,2 +1,5 @@
--Use 'EXISTS' sqlite3 keyword to determine existence of a table
+-Use 'EXISTS' sqlite3 keyword to determine existence of a table (optional)
 -EXIT Keyword closes application
+-Stored stack of memory phrases
+#-Script inputs should be sorted according to script names
+#-Substitution should be a single pass, and should work on one word at a time.

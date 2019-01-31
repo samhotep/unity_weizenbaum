@@ -1,5 +1,12 @@
 -Use 'EXISTS' sqlite3 keyword to determine existence of a table (optional)
--EXIT Keyword closes application
+-System pause
 -Stored stack of memory phrases
+-Memory should interact with None response
+-Differentiate between equivalence class and dlist
+#-EXIT Keyword closes application
+#-Method to replicate reassembly rules for different decomposition rules
 #-Script inputs should be sorted according to script names
-#-Substitution should be a single pass, and should work on one word at a time.
+#-Substitution should be a single pass, and should work on one word at a time
+
+Observations
+ML for word morphing i.e. changing the intonation of an existing word to match a context(learning pronunciation), in concerto with ML for language heuristics.

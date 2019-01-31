@@ -8,12 +8,13 @@ class main():
 
 	def list_scripts(self):
 		print('These are the available scripts. More to be added soon.')
-		self.conn = sqlite3.connect('testdb')
-		scripts = self.conn.execute('SELECT * FROM SCRIPT')
+		conn = sqlite3.connect('testdb')
+		scripts = conn.execute('SELECT * FROM SCRIPT')
 		counter = 1
 		for i in scripts:
 			print(str(counter) + ': ' + i[0])
 			counter += 1
+		conn.close()
 
 	def get_user_input(self):
 		print('\nPlease type in the name of the script to be used.')

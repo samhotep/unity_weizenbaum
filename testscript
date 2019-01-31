@@ -11,6 +11,7 @@ D-Rule: (0 you remember 0)
 R-Rule: (Do you often think of 2)
 D-Rule: (0 do I remember 0)
 R-Rule: (Did you think I would forget 2)
+Copy: D-Rule: (0 testrule 0)
 Eq: family
 Keyword: (sister, 3, family)
 Keyword: (mother, 3, family)
@@ -22,3 +23,6 @@ Keyword: (mother, 3, family)
 // 3. Equivalence classes must be defined before they can be used by keywords.
 // 4. Rules pertaining to a certain keyword must be defined before the next keyword is defined.
 // 5. The parent decomposition rule for a reassembly rule is the last defined decomposition rule.
+// 6. If the specifier 'copy' is used before a decomposition rule, then the reassembly rules attached to the previous  // rule are copied.
+// 7. None is used as the equivalence class for situations when no keyword is found.
+// 8. Equivalence Classes pair a set of keywords to a set of decomposition rules while Dlists pair a set of keywords to  // a single equivalence class. 

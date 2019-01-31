@@ -32,8 +32,11 @@ class ScriptReader():
 						pass
 					elif self.get_equivalence_class(line):
 						pass
+					elif self.get_empty(line):
+						pass
 			self.conn.close()
 			print('Finished scanning.')
+			sys.exit()
 
 	def get_opening(self, line):
 		try:
@@ -57,6 +60,8 @@ class ScriptReader():
 			temp = None
 		if temp:
 			res = self.clean_group(temp)
+			if self.get_memory(res[0]):
+				pass
 			if not self.already_exists('KEYWORD', res[0].lower()):
 				try:
 					self.current_keyword = res[0].lower()
@@ -67,18 +72,45 @@ class ScriptReader():
 					self.current_eq = res[2].lower()
 				except IndexError as e:
 					self.current_eq = self.current_keyword
-				self.conn.execute('INSERT INTO KEYWORD VALUES("' + self.current_keyword + '", ' + rank + ', "' + \
-					self.current_eq + '", "' + self.name + '")')
+					self.conn.execute('INSERT INTO EQ VALUES("' + self.current_eq + '", "' + self.name + '")')
+				self.conn.execute('INSERT INTO KEYWORD VALUES("' + self.current_keyword + '", ' + str(rank) + \
+					', "' + self.current_eq + '", "' + self.name + '")')
 				self.conn.commit()
 				return True
 
+	def get_memory(self, line):
+		try:
+			temp = re.search(self.me, line).group
+		except AttributeError as e:
+			temp = None
+		if temp:
+			if not self.already_exists('MEMORY', temp(1).lower()):
+				try:
+					self.conn.execute('INSERT INTO MEMORY VALUES("' + temp(1).lower() + '", "' + self.name + '")')
+					self.conn.commit()
+					return True
+				except IndexError as e:
+					pass	
+
 	def get_decomposition_rule(self, line):
+		copy = False
+		if 'Copy:' in line:
+			line = re.sub('Copy:', '', line).strip()
+			copy = True
 		try:
 			temp = re.search(self.dr, line).group
 		except AttributeError as e:
 			temp = None
 		if temp:
 			if not self.already_exists('DECOMP_RULE', temp(1).lower()):
+				if copy:
+					d_rule = temp(1).lower()
+					rules = self.conn.execute('SELECT * FROM REASSEM_RULE WHERE D_RULE=="' + self.current_d_rule \
+						+ '"')
+					for i in rules:
+						self.conn.execute('INSERT INTO REASSEM_RULE VALUES("' + i[0] + '", "' + i[1] + '", "' \
+							+ d_rule + '", 0, "' + i[4] + '")')
+						self.conn.commit()
 				self.current_d_rule = temp(1).lower()
 				self.conn.execute('INSERT INTO DECOMP_RULE VALUES("' + self.current_d_rule + '", "' + \
 					self.current_eq + '", "' + self.name + '")')
@@ -128,6 +160,20 @@ class ScriptReader():
 				self.conn.commit()
 				return True
 
+	def get_empty(self, line):
+		try:
+			temp = re.search(self.em, line).group
+		except AttributeError as e:
+			temp = None
+		if temp:
+			if not self.already_exists('EMPTY', temp(1).lower()):
+				try:
+					self.conn.execute('INSERT INTO EMPTY VALUES("' + temp(1).lower() + '", 0, "' + self.name + '")')
+					self.conn.commit()
+					return True
+				except IndexError as e:
+					pass
+
 	def compile_re(self):
 		self.st = re.compile(r'START: (.*)')
 		self.kw = re.compile(r'Keyword: (.*)')
@@ -135,6 +181,7 @@ class ScriptReader():
 		self.ar = re.compile(r'R-Rule: (.*)')
 		self.sr = re.compile(r'Sub: (.*)')
 		self.er = re.compile(r'Eq: (.*)')
+		self.em = re.compile(r'None: (.*)')
 
 	#Helper functions
 	def clean_group(self, group):
@@ -171,6 +218,8 @@ class setup():
 		self.conn.execute('CREATE TABLE KEYWORD(__NAME TEXT, RANK INT, EQ TEXT, __SCRIPT TEXT)')
 		self.conn.execute('CREATE TABLE DECOMP_RULE(__NAME TEXT, EQ TEXT, __SCRIPT TEXT)')
 		self.conn.execute('CREATE TABLE REASSEM_RULE(__NAME TEXT, TYPE TEXT, D_RULE TEXT, RANK INT, __SCRIPT TEXT)')
+		self.conn.execute('CREATE TABLE MEMORY(__NAME TEXT, __SCRIPT TEXT)')
+		self.conn.execute('CREATE TABLE EMPTY(__NAME TEXT, RANK INT, __SCRIPT TEXT)')
 
 if __name__ == '__main__':
 	try:

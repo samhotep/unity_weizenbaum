@@ -1,9 +1,5 @@
 import sqlite3, re, sys
-
-class Keyword():
-	"""Determines how input text is sorted and transformed"""
-	def __init__(self, rank):
-		self.rank = rank
+from datetime import date
 
 '''We start by selecting a script from the db. Having done this, the opening phrase is loaded as pertaining to this
 script, then printed to the user. The next task is to parse user input, according to rules stored in the database.i.e
@@ -21,8 +17,10 @@ class UNITY():
 		o = self.conn.execute('SELECT * FROM OPENING WHERE __SCRIPT="' + self.script + '"')
 		if len(o.fetchall()) > 0:
 			o = self.conn.execute('SELECT * FROM OPENING WHERE __SCRIPT="' + self.script + '"')
+			self.mem_counter = 0
 			for opening in o:
-				print('\n' + opening[0])
+				print("\n[SESSION OPENED: " + date.today().ctime() + "](TYPE 'exit' to close.)")
+				print('UNITY: ' + opening[0].upper())
 				while True:
 					self.parse_input()
 		else:
@@ -31,14 +29,21 @@ class UNITY():
 	def parse_input(self):
 		#Collect the user input for analysis.
 		self.keystack = []
-		self.sub_specials(input())
-		self.substitute()
-		self.transform()
+		capture = input()
+		if capture.lower() == 'exit':
+			self.conn.close()
+			sys.exit()
+		else:
+			self.sub_specials(capture)
+			self.substitute()
+			self.transform()
 
 	def sub_specials(self, user_input):
+		specials = [',', '.']
 		user_input = re.sub(r'\?', '', user_input).lower()
-		if ',' in user_input:
-			user_input = user_input.split(',')[-1]
+		for special in specials:
+			if special in user_input:
+				user_input = user_input.split(special)[-1]
 		self.user_inputs = user_input.strip().split(' ')
 
 	def substitute(self):
@@ -69,13 +74,11 @@ class UNITY():
 					rank, eq = j[0], j[1]
 				add = False
 				if len(self.keystack) == 0:
-					self.keystack.append([i, rank])
+					self.keystack.append([i, rank, eq])
 				else:
 					for y in self.keystack:
 						if not i in y:
-							add = True
-				if add:
-					self.keystack.append([i, rank])
+							self.keystack.append([i, rank, eq])
 				self.keystack.sort(key= lambda s: s[1], reverse=True)
 		#print(self.keystack) #Debug
 
@@ -83,7 +86,7 @@ class UNITY():
 		#Create a rule stack of decomposition rules from the equivalence class of the topmost keyword
 		self.d_rule_stack = []
 		try:
-			decom = self.conn.execute('SELECT __NAME, EQ FROM DECOMP_RULE WHERE EQ=="' + self.keystack[0][0] + \
+			decom = self.conn.execute('SELECT __NAME, EQ FROM DECOMP_RULE WHERE EQ=="' + self.keystack[0][2] + \
 			'" AND __SCRIPT=="' + self.script + '"')
 			for i in decom:
 				self.d_rule_stack.append([i[0], i[1]])
@@ -92,11 +95,19 @@ class UNITY():
 			#Topmost decomposition rule determines how the word is reassembled
 			self.assemble_reply(self.extract_response())
 		except IndexError as e:
-			print("I'm sorry, i don't understand")
+			rank = 999999999999999999
+			message = self.conn.execute('SELECT * FROM EMPTY WHERE __SCRIPT=="' + self.script + '"')
+			for i in message:
+				if int(i[1]) <= rank:
+					rank = int(i[1])
+					selected_message = i[0]
+			self.conn.execute('UPDATE EMPTY SET RANK=' + str(rank+1) + ' WHERE __NAME=="' + selected_message + '"')
+			self.conn.commit()
+			print('UNITY: ' + selected_message.upper())
 
 	def extract_response(self):
 		#Transform decomposition rule into a regex, and extract input components necessary for reassembly
-		word = self.reconstruct_word(self.user_inputs)
+		word = re.sub(self.keystack[0][0], self.keystack[0][2], self.reconstruct_word(self.user_inputs))
 		#print('word: ' + word) #Debug
 		for i in self.d_rule_stack:
 			res = self.clean_rule(i[0])
@@ -135,7 +146,7 @@ class UNITY():
 				try:
 					ref = int(i) - 1
 				except ValueError as e:
-					pass				
+					pass		
 			cleaned_rule = self.clean_rule(selected_rule)
 			#print('Clean: ' + cleaned_rule) #Debug
 			#print(responses[ref]) #Debug
@@ -143,7 +154,7 @@ class UNITY():
 				self.reply = re.sub(r'\d', str(responses[ref]), cleaned_rule)
 			except UnboundLocalError as e:
 				self.reply = re.sub(r'\d', str(responses), cleaned_rule)
-			print(self.reply.upper())
+			print('UNITY: ' + self.reply.upper())
 
 	#Helper functions
 	def reconstruct_word(self, word):
